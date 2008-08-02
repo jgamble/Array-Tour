@@ -26,3 +26,7 @@ Revision history for Perl extension Array::Tour.
 	  automatically add the {offset} co-ordinates to the
 	  {position} co-ordinates.  Used by base and child classes
 	  in the next() method.
+
+0.04  Sat Aug 02 2008
+	- First upload to CPAN failed to include helper.pl and
+	  all the tests failed.  Added helper.pl to the MANIFEST.

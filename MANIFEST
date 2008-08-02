@@ -6,6 +6,7 @@ README
 lib/Array/Tour.pm
 lib/Array/Tour/Serpentine.pm
 lib/Array/Tour/Spiral.pm
+t/helper.pl
 t/baseclass5x5.t
 t/serpen5x5.t
 t/serpen5x8.t

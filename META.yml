@@ -1,6 +1,6 @@
 ---
 name: Array-Tour
-version: 0.03
+version: 0.04
 author:
   - 'John M. Gamble <jgamble@cpan.org>'
 abstract: Base class for Array Tours.
@@ -16,12 +16,12 @@ meta-spec:
 provides:
   Array::Tour:
     file: lib/Array/Tour.pm
-    version: 0.03
+    version: 0.04
   Array::Tour::Serpentine:
     file: lib/Array/Tour/Serpentine.pm
-    version: 0.03
+    version: 0.04
   Array::Tour::Spiral:
     file: lib/Array/Tour/Spiral.pm
-    version: 0.03
+    version: 0.04
 resources:
   license: http://dev.perl.org/licenses/

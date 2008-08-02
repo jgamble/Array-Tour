@@ -76,7 +76,7 @@ use vars qw(%EXPORT_TAGS @EXPORT_OK);
 
 @EXPORT_OK = ( @{ $EXPORT_TAGS{'directions'} }, @{ $EXPORT_TAGS{'status'} } );
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 #
 # Directions.
