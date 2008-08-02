@@ -1,0 +1,28 @@
+Revision history for Perl extension Array::Tour.
+
+0.01  Wed Mar 22 15:21:37 2006
+	- original version; created by h2xs 1.23 with options
+		-A -X -v 0.1 -n Array::Tour
+	- Refactored code to make Spiral.pm and Serpentine.pm
+	  child classes of Array::Tour.
+	- Added packages Spiral.pm and Serpentine.pm.
+
+0.02  Thurs Mar 28 2008
+	- Added methods _make_array() for creating an
+	  internal array for bookkeepping purposes (will be
+	  useful for a not-yet written module).
+	- Added get_array() to retrieve that internal array for
+	  the users.
+	- Added method uses_array() so that user can know whether
+	  the Array::Tour::XXXX module has an internal array to
+	  return, or whether the package works by touring only.
+	- Changed pod style to comment individual methods.
+
+0.03  Thurs Jul 31 2008
+	- Added RandomWalk.pm.  It's suspicously like the "make"
+	  code in Games::Maze.  I'm sure it's just a coincidence.
+	  Plan to add Prim's and Kruskal's later.
+	- Method adjusted_position(), added to Tour.pm, will
+	  automatically add the {offset} co-ordinates to the
+	  {position} co-ordinates.  Used by base and child classes
+	  in the next() method.
