@@ -76,7 +76,7 @@ use vars qw(%EXPORT_TAGS @EXPORT_OK);
 
 @EXPORT_OK = ( @{ $EXPORT_TAGS{'directions'} }, @{ $EXPORT_TAGS{'status'} } );
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 #
 # Directions.
@@ -119,34 +119,7 @@ Four attributes start out available from the base class, C<dimensions>,
 C<offset>, C<position>, and C<start>.
 
 These four attributes are automatically set before calling the C<_set()>
-method:
-
-=over 4
-
-=item dimensions
-
-I<Default value: [1, 1, 1].> Provide the size of the array:
-
-  my $spath1 = Array::Tour->new(dimensions => [16, 16, 1]);
-
-The dimensions attribute represents a three-dimensional array, defined by rows,
-columns, and levels.  If you are interested only in a two-dimensional array,
-you don't need to specify the third dimension -- it will be added on for you:
-
-  my $spath1 = Array::Tour->new(dimensions => [16, 16]);
-
-This has the exact same effect as the code above it.
-
-In fact the B<dimensions> attribute is so forgiving that if you are only
-interested in a simple square array, this will be sufficient:
-
-    my $spath1 = Array::Tour->new(dimensions => 16);
-
-The attribute will detect the single dimension, duplicate it, and add the
-third dimension of 1.  You will have the same dimensions as the previous
-examples.
-
-=back
+method.
 
 =cut
 
@@ -191,7 +164,9 @@ sub new
 	return $self;
 }
 
-=head3 reset([<attribute> => value, ...])
+=head3 reset()
+
+  $tour->reset([<attribute> => value, ...])
 
 Reset the object by returning its internal state to its original form.
 Optionally change some of the characteristics using the same parameters
@@ -268,7 +243,7 @@ sub opposite_direction
 	return ($dir <=  Ceiling )? ($dir << 5): ($dir >> 5);
 }
 
-=head3 say_direction
+=head3 say_direction()
 
 Return the name in English of the current direction.
 
@@ -282,7 +257,7 @@ sub say_direction
 	return $self->direction_name($dir);
 }
 
-=head3 direction_name
+=head3 direction_name()
 
 Return the name in English of the direction passed in.
 
@@ -311,10 +286,11 @@ sub direction_name
 		my @p = @{$self->get_position()};
 		return q(SetPosition) . "[" . join(", ", @p) . "]";
 	}
+
 	return q(unknown direction);
 };
 
-=head3 get_position
+=head3 get_position()
 
 Return a reference to an array of coordinates of the current position.
 
@@ -328,7 +304,7 @@ sub get_position
 	return $self->{position};
 }
 
-=head3 get_offset
+=head3 get_offset()
 
 Return a reference to an array of offsets to be added to the current position.
 
@@ -342,7 +318,7 @@ sub get_offset
 	return $self->{offset};
 }
 
-=head3 adjusted_position
+=head3 adjusted_position()
 
 Return a reference to an array of coordinates that are created from the position
 plus the offset. Used by the next() method.
@@ -411,16 +387,7 @@ sub next
 	return $self->adjusted_position();
 }
 
-=head3 uses_array
-
-Returns 0 or 1 depending upon whether there's an internal
-array to return.
-=cut
-
-sub uses_array {my $self = shift; return 0;}
-
-
-=head3 get_array
+=head3 get_array()
 
 Return a reference to the internally generated array.
 
@@ -448,50 +415,23 @@ sub describe
 	return map {$_, $self->{$_}} grep(/^[a-z]/, keys %{$self});
 }
 
-#
-# $self->_set(%attributes);
-#
-# Set the attributes that were passed in via new().
-# This one's pretty minimal because the attributes
-# that we care about in this class are already set.
-#
-=head3 _set()
+=head2 Internal Tour Object Methods
 
-Take the parameters provided to new() and use them to set the
-attributes of the touring object.
-
-=cut
-
-sub _set()
-{
-	my $self = shift;
-	my(%params) = @_;
-
-	warn "Unknown paramter $_" foreach (grep{$_ !~ /reverse/} (keys %params));
-	return $self;
-}
-
-#
-# $self = $self->_set_dimensions($params);
-#
-# Sets the {dimensions} attribute of the object to an
-# array reference.  If a value N is provided instead of
-# an array reference, an NxN square array is created.
-#
-# In all cases, the reference returned has at least three dimensions.
-# The third dimension is 1 by default.
-#
 =head3 _set_dimensions()
 
-    my @dims = Array::Tour->new(dimensions => [12, 16]);
+    my $tour = Array::Tour->new(dimensions => [12, 16]);
+
+This works identically as
+
+    my $tour = Array::Tour->new(dimensions => [12, 16, 1]);
 
 If the grid is going to be square, a single integer is sufficient:
 
-    my @dims = Array::Tour->new(dimensions => 16);
+    my $tour = Array::Tour->new(dimensions => 16);
 
-In both cases, the C<dimensions> attribute is set with a reference to
-a three dimensional array.  The third dimension is set to 1 if no value
-is given for it.
+In both cases, the new() member funcntion calls _set_dimensions() and sets the
+C<dimensions> attribute with a reference to a three dimensional array. The third
+dimension is set to 1 if no value is given for it.
 
 =cut
 
@@ -522,14 +462,15 @@ sub _set_dimensions
 	return $self;
 }
 
-#
-# @offsets = _set_offset($offsetref);
-#
-# Set the offset. This method extends the offset array by zeros
-# to match the size of the dimensions array.
-#
-# Method _set_dimensions() must be called beforhand.
-#
+=head3 _set_offset()
+
+The new() member funcntion calls _set_offset() and sets the C<offset> attribute
+with a reference to an array of coordinates. This method matches the size of the
+C<offset> array to the size of C<dimensions>, so _set_dimensions() must be called
+beforhand.
+
+=cut
+
 sub _set_offset
 {
 	my $self = shift;
@@ -544,13 +485,41 @@ sub _set_offset
 	return @{$self->{offset}};
 }
 
-#
-# $self->_make_array();
-# $self->_make_array($default_value);
-#
-# Make an internal array for reference purposes.  The array cells are
-# set to zero by default, but a different default value may be passed in.
-#
+=head3 _move_to()
+
+	$position = $self->_move_to($direction);	# [$c, $r, $l]
+
+Return a new position depending upon the direction taken. This does not set a
+new position.
+
+=cut
+
+sub _move_to
+{
+	my $self = shift;
+	my($dir) = @_;
+	my($c, $r, $l) = @{ $self->{position} };
+
+	--$r if ($dir & (North | NorthWest | NorthEast));
+	++$r if ($dir & (South | SouthWest | SouthEast));
+	++$c if ($dir & (East  | NorthEast | SouthEast));
+	--$c if ($dir & (West  | NorthWest | SouthWest));
+	++$l if ($dir & Floor);
+	--$l if ($dir & Ceiling);
+	return [$c, $r, $l];
+}
+
+=head3 _make_array()
+
+	$self->_make_array();
+or
+	$self->_make_array($value);
+
+Make an internal array for reference purposes. If no value to set the array cels
+with is passed in, the array cells are set to zero by default.
+
+=cut
+
 sub _make_array
 {
 	my $self = shift;
@@ -570,6 +539,32 @@ sub _make_array
 	}
 	return $self;
 }
+
+=head3 _set()
+
+$self->_set(%attributes);
+
+Take the parameters provided to new() and use them to set the
+attributes of the touring object.
+
+=cut
+
+sub _set()
+{
+	my $self = shift;
+	my(%params) = @_;
+
+	warn "Unknown paramter $_" foreach (grep{$_ !~ /reverse/} (keys %params));
+	return $self;
+}
+
+=head3 _uses_array()
+
+Returns 0 or 1 depending upon whether there's an internal array to return.
+
+=cut
+
+sub _uses_array {my $self = shift; return 0;}
 
 #
 # dump_array
@@ -612,26 +607,6 @@ sub dump_array
 }
 
 #
-# [$c, $r, $l] = $self->_move_to($direction);
-#
-# Return a new position depending upon the direction taken.
-#
-sub _move_to
-{
-	my $self = shift;
-	my($dir) = @_;
-	my($c, $r, $l) = @{ $self->{position} };
-
-	--$r if ($dir & (North | NorthWest | NorthEast));
-	++$r if ($dir & (South | SouthWest | SouthEast));
-	++$c if ($dir & (East  | NorthEast | SouthEast));
-	--$c if ($dir & (West  | NorthWest | SouthWest));
-	++$l if ($dir & Floor);
-	--$l if ($dir & Ceiling);
-	return [$c, $r, $l];
-}
-
-#
 # $class->_copy($self);
 #
 # Duplicate the iterator.
@@ -652,18 +627,22 @@ sub _copy
 1;
 __END__
 
-=head2 Internal Tour Object Methods
-
 =head2 Methods expected to be provided by the derived class.
 
-These methods exist in the base class, but don't do much that is
-useful. The deriving class is expected to override these methods.
+The methods that will have to be written specifically for the individual tour of
+the derived classe will will likely be:
 
-=head2 Subclassing
+=head3 next()
+
+=head3 _set()
+
+=head3 _uses_array()
+
+=head2 Attributes
 
 Array::Tour keeps track of its state through internal attributes that are
-sufficient for its purposes.  Derived classes will probably need to add
-their own attributes.
+sufficient for its purposes. Derived classes will likely need to add attributes
+of their own.
 
 =over 4
 
@@ -672,11 +651,28 @@ their own attributes.
 I<Default value: [1, 1, 1].>  Passed in via method new() using the dimensions
 key, which sets it through the set_dimensions() method.
 
+  my $spath1 = Array::Tour->new(dimensions => [16, 16, 1]);
+or
+  my $spath1 = Array::Tour->new(dimensions => [16, 16]);
+
+The dimensions attribute represents a three-dimensional array, defined by rows,
+columns, and levels.  If you are interested only in a two-dimensional array,
+you don't need to specify the third dimension -- it will be added on for you.
+
+In fact the C<dimensions> attribute is so forgiving that if you are only
+interested in a simple square array, this will be sufficient:
+
+  my $spath1 = Array::Tour->new(dimensions => 16);
+
+The attribute will detect the single dimension, duplicate it, and add the
+third dimension of 1.  You will have the same dimensions as the previous
+examples.
+
 =item offset
 
-I<Default value: [0, 0, 0].> The coordinate of the upper left corner.
-Calls to get_coordinates() will return the position adjusted by the value
-in C<offset>.
+I<Default value: [0, 0, 0].> The coordinate of the upper left corner. Calls to
+adjusted_position() (which in turn is called by the next() method) will return
+the position adjusted by the value in C<offset>.
 
 =item start
 
@@ -686,14 +682,6 @@ automatically in this class.
 =item position
 
 The current position of the iterator in the array.
-
-=back
-
-There are also internal attributes that are used to control the behavior
-of an Array::Tour object. These have default values that you may
-override in your sub-class:
-
-=over 4
 
 =item odometer
 
@@ -720,7 +708,7 @@ needed.
 
 =head2 Current Tours
 
-This, the base class, performs a typewriter left to right tour of the array. If
+This, the base class, performs a typewriter left-to-right tour of the array. If
 the array has a third dimension, it will go to the next level after completing
 the tour of the rows of the current level.
 
@@ -732,18 +720,23 @@ L<Serpentine|Array::Tour::Serpentine>
 
 L<RandomWalk|Array::Tour::RandomWalk>
 
-There may be other tours under development.  See the Changes file for more information.
+There may be other tours under development. See the Changes file for more
+information.
 
 =head2 EXPORT
 
-The :directions EXPORT tag will let you use the constants that indicate
-direction.  They are the directions C<North>, C<NorthEast>, C<East>,
-C<SouthEast>, C<South>, C<SouthWest>, C<West>, and C<NorthWest>.
+The :directions tag will let you use the constants that indicate
+direction. They are the directions C<North>, C<NorthEast>, C<East>,
+C<SouthEast>, C<South>, C<SouthWest>, C<West>, C<NorthWest>, C<Ceiling>,
+C<Floor>, and C<SetPosition>, which indicates a directionless change in
+position.
 
-The :status EXPORT tag has the values for the running state of the
+The :status tag has the values for the running state of the
 iterator.
 
 =head2 See Also
+
+
 
 =head1 AUTHOR
 

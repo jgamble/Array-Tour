@@ -30,3 +30,8 @@ Revision history for Perl extension Array::Tour.
 0.04  Sat Aug 02 2008
 	- First upload to CPAN failed to include helper.pl and
 	  all the tests failed.  Added helper.pl to the MANIFEST.
+
+0.05  Tues Aug 06 2008
+	- Fairly bad POD documentation made less bad in Tour.pm.
+	- This time remembered to add RandomWalk.pm to MANIFEST.
+	  No tests for it yet.

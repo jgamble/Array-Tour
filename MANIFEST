@@ -4,6 +4,7 @@ MANIFEST
 META.yml
 README
 lib/Array/Tour.pm
+lib/Array/Tour/RandomWalk.pm
 lib/Array/Tour/Serpentine.pm
 lib/Array/Tour/Spiral.pm
 t/helper.pl
