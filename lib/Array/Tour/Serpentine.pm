@@ -7,28 +7,76 @@ use integer;
 use base q(Array::Tour);
 use Array::Tour qw(:directions :status);
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
+
+=head1 NAME
+
+Array::Tour::Serpentine - Return coordinates to take a serpentine path.
+
+=head1 SYNOPSIS
+
+  use Array::Tour::Serpentine qw(:directions);
+
+  my $tour = Array::Tour::Serpentine->new(
+      dimensions => [5, 5],
+      vertical => $vertical,
+      corner_right => $corner_right,
+      corner_bottom => $corner_bottom);
+
+Creates the object with its attributes. The attributes B<dimensions>,
+B<offset>, B<start>, and B<position> are inherited from L<Array::Tour>.
+This package adds more attributes of its own, which are:
+
+=over 4
+
+=item counterclock, corner_bottom, corner_right, vertical
+
+I<Default values: 0.> All are boolean values that affect the starting
+point and the direction of the tour. By default, the tour is
+generated the upper left corner in a horizontal back-and-forth path.
+
+See the Examples section
+to see what effects the different combinations produce.
+
+=back
+
+=head1 PREREQUISITES
+
+Perl 5.8 or later. This is the version of perl under which this module
+was developed.
+
+=head1 DESCRIPTION
+
+A simple iterator that will return the coordinates of the next cell if
+one were to tour an array's cells in a serpentine path.
+
+=head2 Serpentine Object Methods
 
 
-#
-# $dir = $tour->direction()
-#
-# Return the direction we just walked.
-#
-# Overrides Array::Tour's direction() method.
-#
+=head3 direction()
+
+  $dir = $tour->direction()
+
+  Return the direction we just walked.
+
+  Overrides Array::Tour's direction() method.
+=cut
+
 sub direction()
 {
 	my $self = shift;
 	return ($self->{status} == STOP)? undef: ${$self->{direction}}[0];
 }
 
-#
-# $coord_ref = $tour->next();
-#
-# Returns a reference to an array of coordinates.  Returns undef
-# if there is no next cell to visit.
-#
+=head3 next()
+
+Returns a reference to an array of coordinates.  Returns undef
+if there is no next cell to visit.
+
+Overrides Array::Tour's next() method.
+
+=cut
+
 sub next
 {
 	my $self = shift;
@@ -72,9 +120,16 @@ sub next
 	return $self->adjusted_position();
 }
 
-#
-# $ruot = $tour->opposite();
-#
+=head3 opposite()
+
+  $ruot = $tour->opposite();
+
+Return a new object that follows the same path as the original object,
+reversing the inward/outward direction.
+
+
+=cut
+
 sub opposite()
 {
 	my $self = shift;
@@ -88,6 +143,14 @@ sub opposite()
 
 	return Array::Tour::Serpentine->new(%anti_self);
 }
+
+=head3 _set()
+
+  $self->_set(%parameters);
+
+  Override Array::Tour's _set() method for one that can handle
+  our parameters.
+=cut
 
 sub _set()
 {
@@ -136,68 +199,6 @@ sub _set()
 1;
 __END__
 
-=head1 NAME
-
-Array::Tour::Serpentine - Return coordinates to take a serpentine path.
-
-=head1 SYNOPSIS
-
-  use Array::Tour::Serpentine qw(:directions);
-
-  my $tour = Array::Tour::Serpentine->new(
-      dimensions => [5, 5],
-      vertical => $vertical,
-      corner_right => $corner_right,
-      corner_bottom => $corner_bottom);
-
-=head1 PREREQUISITES
-
-Perl 5.6 or later. This is the version of perl under which this module
-was developed.
-
-=head1 DESCRIPTION
-
-A simple iterator that will return the coordinates of the next cell if
-one were to tour an array's cells in a serpentine path.
-
-=head2 Serpentine Object Methods
-
-=head3 new([<attribute> => value, ...])
-
-Creates the object with its attributes. The attributes B<dimensions>,
-B<offset>, B<start>, and B<position> are inherited from L<Array::Tour>.
-This package adds more attributes of its own, which are:
-
-=over 4
-
-=item counterclock, corner_bottom, corner_right, vertical
-
-I<Default values: 0.> All are boolean values that affect the starting
-point and the direction of the tour. By default, the tour is
-generated the upper left corner in a horizontal back-and-forth path.
-See the Examples section
-to see what effects the different combinations produce.
-
-=back
-
-=head3 next()
-
-=head3 has_next()
-
-=head3 current()
-
-=head3 direction()
-
-=head3 reset([<attribute> => value, ...])
-
-=head3 describe()
-
-These methods are inherited from L<Array::Tour> and have the same behavior.
-
-=head3 opposite()
-
-Return a new object that follows the same path as the original object,
-reversing the inward/outward direction.
 
 =head2 Example: A Serpentine Tour of the Square
 

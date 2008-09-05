@@ -1,5 +1,66 @@
-package Array::Tour::RandomWalk;
 
+=head1 NAME
+
+Array::Tour::RandomWalk - Return coordinates to take a random path.
+
+=head1 SYNOPSIS
+
+      use Array::Tour::RandomWalk qw(:directions);
+  
+      my $rndwalk = Array::Tour::RandomWalk->new(
+          dimensions => [13, 7, 1],
+	  start => [0, 0, 0]
+	  backtrack => "queue",
+	  );
+
+The object is created with the following attributes:
+
+=over 4
+
+=item dimensions
+
+Set the size of the grid:
+
+	my $spath1 = Array::Tour->new(dimensions => [16, 16]);
+
+If the grid is going to be square, a single integer is sufficient:
+
+	my $spath1 = Array::Tour->new(dimensions => 16);
+
+=item start
+
+I<Default value: [0, 0, 0].> Starting point of the random walk.
+
+=item backtrack
+
+I<Default value: 'queue'.> Method of looking up cells to backtrack to. As the
+random walk is made, cells where there were more than one direction to go are
+stored in a list. When the random walk hits a dead end, it goes back to a cell
+in the list. By default, the list is treated as a queue: the first cell on the
+list is the first cell used.
+
+If backtrack is set to 'stack', the list is treated as a stack: the last cell on
+the list is the first cell used.
+
+The final choice, 'random', will choose a cell at random from the list.
+
+=back
+
+The new() method is defined in the Array::Tour class.  Attributes unique to this
+class are dealt with in its own _set() method.
+
+=head1 PREREQUISITES
+
+Perl 5.8 or later. This is the version of perl under which this module
+was developed.
+
+=head1 DESCRIPTION
+
+A simple iterator that will return the coordinates of the next cell if
+one were to randomly tour a matrix.
+
+=cut
+package Array::Tour::RandomWalk;
 use 5.008;
 use strict;
 use warnings;
@@ -7,51 +68,33 @@ use integer;
 use base q(Array::Tour);
 use Array::Tour qw(:directions :status);
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
-sub _set
-{
-	my $self = shift;
-	my(%params) = @_;
+=head3 direction()
 
-	#
-	# Parameter checks.
-	#
-	warn "Unknown paramter $_" foreach (grep{$_ !~ /fn_choosedir|start/} (keys %params));
-	$params{start} ||= [0, 0, 0];
+Returns the current direction as found in the :directions EXPORT tag.
 
-	#
-	# We've got the dimensions, now set up an array.
-	#
-	$self->_make_array();
+Overrides Array::Tour's direction() method.
 
-	$self->{position} = $self->{start} = $params{start};
-	$self->{fn_choosedir} = $params{fn_choosedir} || \&_random_dir;
+=cut
 
-	$self->{queue} = ();
-
-	return $self;
-}
-
-#
-# $dir = $tour->direction()
-#
-# Return the direction we just walked.
-#
-# Overrides Array::Tour's direction() method.
-#
 sub direction()
 {
 	my $self = shift;
 	return ($self->{tourstatus} == STOP)? NoDirection: $self->{direction};
 }
 
-#
-# $coord_ref = $tour->next();
-#
-# Returns a reference to an array of coordinates.  Returns undef
-# if there is no next cell to visit.
-#
+=head2 Tour Object Methods
+
+=head3 next()
+
+Returns an array reference to the next coordinates to use.  Returns undef if
+the object is finished.
+
+Overrides Array::Tour's next() method.
+
+=cut
+
 sub next
 {
 	my $self = shift;
@@ -60,6 +103,8 @@ sub next
 
 	my @dir = $self->_collect_dirs();
 
+#	print "Position => [", join(", ", @{$self->get_position()}), "]\n",
+#		"Can go (", join(", ", (map{$self->direction_name($_)} @dir)), ")\n";
 	#
 	# There is a cell to break into.
 	#
@@ -71,28 +116,36 @@ sub next
 		# If there were multiple choices, save it
 		# for future reference.
 		#
-		push @{ $self->{queue} }, $p if (@dir > 1);
+		push @{ $self->{plist} }, $p if (@dir > 1);
 
 		#
 		# Choose a wall at random and break into the next cell.
 		#
-#		my $choose_dir = $self->{fn_choosedir};
-#		my $d = $choose_dir->(\@dir, $self->{position});
-		my $d = $self->{fn_choosedir}->(\@dir, $p);
-		$self->{direction} = $d;
-		$self->_break_through($d);
+		$self->{direction} = $self->{wander}->(\@dir, $p);
+		$self->_break_through();
 		++$self->{odometer};
 	}
 	else	# No place to go, back up.
 	{
-		if (@{ $self->{queue} } == 0)	# No place to back up, quit.
+		if (@{ $self->{plist} } == 0)	# No place to back up, quit.
 		{
 			$self->{tourstatus} = STOP;
 			return undef;
 		}
 
 		$self->{direction} = SetPosition;
-		$self->{position} = shift @{ $self->{queue} };
+		if ($self->{backtrack} eq 'stack')
+		{
+			$self->{position} = pop @{ $self->{plist} };
+		}
+		elsif ($self->{backtrack} eq 'random')
+		{
+			$self->{position} = splice @{ $self->{plist} }, rand @{ $self->{plist} }, 1;
+		}
+		else
+		{
+			$self->{position} = shift @{ $self->{plist} };
+		}
 	}
 
 #	print "\n********\n", $self->dump_array(), "\n********\n";
@@ -100,21 +153,66 @@ sub next
 	return $self->adjusted_position();
 }
 
-#
-# Default mechanism to perform the random walk.
-#
+=head2 Internal Tour Object Methods
+
+=head3 _set()
+
+  $self->_set(%attributes);
+  
+Overrides Array::Tour's _set() method.
+
+=cut
+sub _set
+{
+	my $self = shift;
+	my(%params) = @_;
+
+	#
+	# Parameter checks.
+	#
+	warn "Unknown paramter $_" foreach (grep{$_ !~ /backtrack|wander|start/} (keys %params));
+	$params{start} ||= [0, 0, 0];
+	$params{backtrack} ||= "queue";
+
+	#
+	# We've got the dimensions, now set up an array.
+	#
+	$self->_make_array();
+
+	$self->{position} = $self->{start} = $params{start};
+	$self->{wander} = $params{wander} || \&_random_dir;
+	$self->{backtrack} = $params{backtrack};
+
+	$self->{plist} = ();
+
+	return $self;
+}
+
+=head3 _random_dir()
+
+The default function used to perform the random walk.
+
+The function may be overridden if a function is referenced in {wander}.  This
+function will take two arguments, a reference the list of possible directions
+to move to, and a reference to the position (an array of [column, row, level]).
+
+=cut
+
 sub _random_dir
 {
 	return ${$_[0]}[int(rand(@{$_[0]}))];
 }
 
-#
-# @directions = $obj->_collect_dirs($c, $r, $l);
-#
-# Find all of our possible directions to wander through the array.
-# You are only allowed to go into not-yet-broken cells.  The directions
-# are deliberately accumulated in a counter-clockwise fashion.
-#
+=head3 _collect_dirs()
+
+  @directions = $obj->_collect_dirs($c, $r, $l);
+
+Find all of our possible directions to wander through the array.
+You are only allowed to go into not-yet-broken cells.  The directions
+are deliberately accumulated in a counter-clockwise fashion.
+
+=cut
+
 sub _collect_dirs
 {
 	my $self = shift;
@@ -134,18 +232,20 @@ sub _collect_dirs
 	push(@dir, East)     if ($c < $c_siz and $$m[$l][$r][$c + 1] == 0);
 	push(@dir, Ceiling)  if ($l > 0 and $$m[$l - 1][$r][$c] == 0);
 	push(@dir, Floor)    if ($l < $l_siz and $$m[$l + 1][$r][$c] == 0);
-	print "Position => [", join(", ", @{$self->get_position()}), "]\n",
-		"Can go (", join(", ", (map{$self->direction_name($_)} @dir)), ")\n";
 	return @dir;
 }
+
+=head3 _break_through()
+
+=cut
 
 sub _break_through
 {
 	my $self = shift;
-	my($dir) = @_;
+	my $dir = $self->{direction};
 	my($c, $r, $l) = @{$self->{position}};
 	my $m = $self->get_array();
-#	print $self->dump_array();
+
 	$$m[$l][$r][$c] |= $dir;
 	($c, $r, $l) = @{$self->_move_to($dir)};
 	$$m[$l][$r][$c] |= $self->opposite_direction($dir);
@@ -155,86 +255,10 @@ sub _break_through
 1;
 __END__
 
-=head1 NAME
-
-Array::Tour::Random - Class for Array Tours.
-
-=head1 SYNOPSIS
-
-  use Array::Tour::Random qw(:directions);
-
-=head1 PREREQUISITES
-
-Perl 5.6 or later. This is the version of perl under which this module
-was developed.
-
-=head1 DESCRIPTION
-
-A simple iterator that will return the coordinates of the next cell if
-one were to randomly tour a matrix.
-
-=head2 Tour Object Methods
-
-=head3 new([<attribute> => value, ...])
-
-Creates the object with its attributes. The attributes are:
-
-=over 4
-
-=item dimensions
-
-Set the size of the grid:
-
-	my $spath1 = Array::Tour->new(dimensions => [16, 16]);
-
-If the grid is going to be square, a single integer is sufficient:
-
-	my $spath1 = Array::Tour->new(dimensions => 16);
-
-=item start
-
-I<Default value: [0, 0, 0].> Starting point of the random walk.
-
-=back
-
-=head3 has_next()
-
-Returns 1 if there is more to the tour, 0 if finished.
-
-=head3 next()
-
-Returns an array reference to the next coordinates to use. Returns
-undef if the iterator is finished.
-
-=head3 direction()
-
-Returns the current direction as found in the :directions EXPORT tag.
-These are the constant values North, West, South, and East.
-
-
-=head3 reset([<attribute> => value, ...])
-
-Return the internal state of the iterator to its original form.
-Optionally change some of the characteristics using the same parameters
-found in the new() method.
-
-=head3 opposite()
-
-Return a new object that follows the same path as the original object,
-reversing the inward/outward direction.
-
-=head3 describe()
-
-Returns as a hash the attributes of the maze object. The hash may be
-used to create a new tour object.
-
-=head3 dimensions()
-
-Returns the value of the dimensions attribute.
-
 =head2 See Also
 
-Games::Maze
+L<Array::Tour|Array::Tour>
+L<Games::Maze|Games::Maze>
 
 =head1 AUTHOR
 

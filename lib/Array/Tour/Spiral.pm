@@ -7,7 +7,58 @@ use integer;
 use base q(Array::Tour);
 use Array::Tour qw(:directions :status);
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
+
+=head1 NAME
+
+Array::Tour::Spiral - Return coordinates to take a spiral path.
+
+=head1 SYNOPSIS
+
+  use Array::Tour::Spiral qw(:directions);
+
+  my $spiral = Array::Tour::Spiral->new(
+      dimensions => [5, 5],
+      counterclock => $counterclock,
+      corner_right => $corner_right,
+      corner_bottom => $corner_bottom
+      inward => $inward);
+
+Creates the object with its attributes. The attributes are:
+
+=over 4
+
+=item dimensions
+
+Set the size of the grid:
+
+	my $spath1 = Array::Tour::Spiral->new(dimensions => [16, 16]);
+
+If the grid is going to be square, a single integer is sufficient:
+
+	my $spath1 = Array::Tour::Spiral->new(dimensions => 16);
+
+=item counterclock corner_bottom corner_right inward
+
+I<Default values: 0.> All are boolean values that affect the starting
+point and the direction of the spiral path. By default, the spiral is
+generated outwards from the center, using the upper left corner (if
+there is a choice), in a clockwise direction. See the Examples section
+to see what effects the different combinations produce.
+
+=back
+
+=head1 PREREQUISITES
+
+Perl 5.8 or later. This is the version of perl under which this module
+was developed.
+
+=head1 DESCRIPTION
+
+A simple iterator that will return the coordinates of the next cell if
+one were to tour a matrice's cells in a spiral path.
+
+=head2 Spiral Object Methods
 
 =head3 direction
 
@@ -28,7 +79,7 @@ sub direction()
 =head3 next()
 
 Returns an array reference to the next coordinates to use. Returns
-undef if the iterator is finished.
+undef if there is no next cell to visit.
 
     my $ctr = 1;
     my $tour = Array::Tour::Spiral->new(dimensions => 64);
@@ -41,6 +92,8 @@ undef if the iterator is finished.
 
 The above example generates Ulam's Spiral
 L<http://en.wikipedia.org/wiki/Ulam_spiral> in the array @grid.
+
+Overrides Array::Tour's next() method.
 
 =cut
 
@@ -92,9 +145,15 @@ sub next()
 	return $self->adjusted_position();
 }
 
-#
-# $larips = $spiral->anti_spiral();
-#
+=head3 anti_spiral()
+
+  $larips = $spiral->anti_spiral();
+
+Return a new object that follows the same path as the original object,
+reversing the inward/outward direction.
+
+=cut
+
 sub anti_spiral()
 {
 	my $self = shift;
@@ -130,12 +189,14 @@ sub anti_spiral()
 	return Array::Tour::Spiral->new(%anti_self);
 }
 
-#
-# $self->_set(%parameters);
-#
-# Override Array::Tour's _set() method for one that can handle
-# our parameters.
-#
+=head3 _set()
+
+  $self->_set(%parameters);
+
+  Override Array::Tour's _set() method for one that can handle
+  our parameters.
+=cut
+
 sub _set()
 {
 	my $self = shift;
@@ -156,11 +217,13 @@ sub _set()
 	return $self->_set_outward();
 }
 
-#
-# $self->_set_inward();
-#
-# Set the attributes knowing that the spiral path goes inward.
-#
+=head3 _set_inward()
+
+  $self->_set_inward();
+
+  Set the attributes knowing that the spiral path goes inward.
+=cut
+
 sub _set_inward()
 {
 	my $self = shift;
@@ -194,11 +257,13 @@ sub _set_inward()
 	return $self;
 }
 
-#
-# $self->_set_outward();
-#
-# Set the attributes knowing that the spiral path goes outward.
-#
+=head3 _set_outward()
+
+  $self->_set_outward();
+
+  Set the attributes knowing that the spiral path goes outward.
+=cut
+
 sub _set_outward()
 {
 	my $self = shift;
@@ -290,101 +355,6 @@ sub _set_outward()
 }
 1;
 __END__
-
-=head1 NAME
-
-Array::Tour::Spiral - Return coordinates to take a spiral path.
-
-=head1 SYNOPSIS
-
-  use Array::Tour::Spiral qw(:directions);
-
-  my $spiral = Array::Tour::Spiral->new(
-      dimensions => [5, 5],
-      counterclock => $counterclock,
-      corner_right => $corner_right,
-      corner_bottom => $corner_bottom
-      inward => $inward);
-
-=head1 PREREQUISITES
-
-Perl 5.6 or later. This is the version of perl under which this module
-was developed.
-
-=head1 DESCRIPTION
-
-A simple iterator that will return the coordinates of the next cell if
-one were to tour a matrice's cells in a spiral path.
-
-=head2 Spiral Object Methods
-
-=head3 new([<attribute> => value, ...])
-
-Creates the object with its attributes. The attributes are:
-
-=over 4
-
-=item dimensions
-
-Set the size of the grid:
-
-	my $spath1 = Array::Tour::Spiral->new(dimensions => [16, 16]);
-
-If the grid is going to be square, a single integer is sufficient:
-
-	my $spath1 = Array::Tour::Spiral->new(dimensions => 16);
-
-=item counterclock
-=item corner_bottom
-=item corner_right
-=item inward
-
-I<Default values: 0.> All are boolean values that affect the starting
-point and the direction of the spiral path. By default, the spiral is
-generated outwards from the center, using the upper left corner (if
-there is a choice), in a clockwise direction. See the Examples section
-to see what effects the different combinations produce.
-
-=back
-
-=head3 has_next()
-
-Returns 1 if there is more to the tour, 0 if finished.
-
-=head3 next()
-
-Returns an array reference to the next coordinates to use. Returns
-undef if the iterator is finished.
-
-=head3 current()
-
-Returns the current coordinates.
-
-=head3 direction()
-
-Returns the current direction as found in the :directions EXPORT tag.
-These are the constant values North, West, South, and East.
-
-
-=head3 reset([<attribute> => value, ...])
-
-Return the internal state of the iterator to its original form.
-Optionally change some of the characteristics using the same parameters
-found in the new() method.
-
-=head3 anti_spiral()
-
-Return a new object that follows the same path as the original object,
-reversing the inward/outward direction.
-
-=head3 describe()
-
-Returns as a hash the attributes of the object. The hash may be
-used to create a new spiral object.
-
-=head3 dimensions()
-
-Returns the value of the dimensions attribute.
 
 =head2 Example: A Spiral Tour of the Square
 

@@ -31,7 +31,29 @@ Revision history for Perl extension Array::Tour.
 	- First upload to CPAN failed to include helper.pl and
 	  all the tests failed.  Added helper.pl to the MANIFEST.
 
-0.05  Tues Aug 06 2008
+0.05  Wed Aug 06 2008
 	- Fairly bad POD documentation made less bad in Tour.pm.
 	- This time remembered to add RandomWalk.pm to MANIFEST.
 	  No tests for it yet.
+0.06  Wed Aug 13 2008
+	- Added {backtrack} attribute to RandomWalk to allow the saved list
+	  of previous positions to be accessed randomly or as a stack, in
+	  addition to the default queue.
+	- Fix the documentation of RandomWalk.pm with respect to the changes in
+	  documentation of Tour.pm.  Also document the new backtrack option.
+	- Added the walktour() function to the helper.pl file.
+      Fri Aug 29 2008
+        - The ongoing saga of making the documentation less incomprehensible.
+	  This time working on Serpentine.pm and Spiral.pm.
+      Mon Sep 01 2008
+	- It would be nice if I could be consistent with my ordering of columns,
+	  rows, and levels.  Fixed a problem with reversed rows and columns
+	  values in Array::Tour's _make_array() and dump_array().
+	- Added an eg directory and put in rnd_wlk.pl as my first example
+	  script.
+      Thurs Sep 04 2008
+	- Terrible documentation mistakes fixed in Serpentine.pm and Spiral.pm.
+	  This doesn't mean the documentation is good, of course.
+	- Some internal methods now use attributes instead of parameters to get
+	  their information.
+	- Added options to the rndwlk.pl script to test features at random.

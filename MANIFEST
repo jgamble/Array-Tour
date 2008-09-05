@@ -7,6 +7,7 @@ lib/Array/Tour.pm
 lib/Array/Tour/RandomWalk.pm
 lib/Array/Tour/Serpentine.pm
 lib/Array/Tour/Spiral.pm
+eg/rndwlk.pl
 t/helper.pl
 t/baseclass5x5.t
 t/serpen5x5.t

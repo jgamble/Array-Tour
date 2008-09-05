@@ -76,7 +76,7 @@ use vars qw(%EXPORT_TAGS @EXPORT_OK);
 
 @EXPORT_OK = ( @{ $EXPORT_TAGS{'directions'} }, @{ $EXPORT_TAGS{'status'} } );
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 #
 # Directions.
@@ -111,15 +111,13 @@ use constant STOP	=> 2;
 
 Creates the object with its attributes.
 
-Since attributes are set using the internal method _set(), it's recommended that
-subclasses do not override new(), but provide their own _set() method to handle
-their own attributes instead.
+With the exception of C<dimensions> and C<offest>, attributes are set using the
+internal method _set(). This means that subclasses should not override new(),
+but instead provide their own _set() method to handle their own attributes.
 
-Four attributes start out available from the base class, C<dimensions>,
-C<offset>, C<position>, and C<start>.
-
-These four attributes are automatically set before calling the C<_set()>
-method.
+In addition to C<dimensions> and C<offeset>, new() also creates internal
+attributes that may be used by subclasses. See the Attributes section for more
+details.
 
 =cut
 
@@ -184,6 +182,7 @@ sub reset
 	$params{tourlength} = 1;
 	$params{tourstatus} = START;
 	$params{odometer} = 0;
+	$params{array} = undef if ($self->_uses_array());
 
 	#
 	# Apply any options passed in.
@@ -524,7 +523,7 @@ sub _make_array
 {
 	my $self = shift;
 	my $dflt = (scalar @_)? $_[0]: 0;
-	my($rows, $cols, $lvls) = map {$_ - 1} @{$self->{dimensions}};
+	my($cols, $rows, $lvls) = map {$_ - 1} @{$self->{dimensions}};
 
 	my $m = $self->{array} = ([]);
 	foreach my $l (0..$lvls)
@@ -584,7 +583,7 @@ sub dump_array
 {
 	my $self = shift;
 	my $format = $_[0] || " %04x";
-	my($rows, $cols, $lvls) = map {$_ - 1} @{$self->{dimensions}};
+	my($cols, $rows, $lvls) = map {$_ - 1} @{$self->{dimensions}};
 	my $m = $self->{array};
 	my @levels;
 
@@ -641,15 +640,15 @@ the derived classe will will likely be:
 =head2 Attributes
 
 Array::Tour keeps track of its state through internal attributes that are
-sufficient for its purposes. Derived classes will likely need to add attributes
-of their own.
+sufficient for its purposes. Derived classes may alter these for their own
+purposes and will likely need to add attributes of their own.
 
 =over 4
 
 =item dimensions
 
-I<Default value: [1, 1, 1].>  Passed in via method new() using the dimensions
-key, which sets it through the set_dimensions() method.
+I<Default value: [1, 1, 1].>  Set in the method new() using the dimensions
+key, which in turn sets it through the set_dimensions() method.
 
   my $spath1 = Array::Tour->new(dimensions => [16, 16, 1]);
 or
@@ -670,7 +669,10 @@ examples.
 
 =item offset
 
-I<Default value: [0, 0, 0].> The coordinate of the upper left corner. Calls to
+I<Default value: [0, 0, 0].> Set in the method new() using the offset
+key, which in turn sets it through the _set_offset() method.
+
+Sets the coordinate of the upper left corner of the tour array. Calls to
 adjusted_position() (which in turn is called by the next() method) will return
 the position adjusted by the value in C<offset>.
 
@@ -731,12 +733,11 @@ C<SouthEast>, C<South>, C<SouthWest>, C<West>, C<NorthWest>, C<Ceiling>,
 C<Floor>, and C<SetPosition>, which indicates a directionless change in
 position.
 
-The :status tag has the values for the running state of the
-iterator.
+The :status tag has the values for the running state of the iterator.
 
 =head2 See Also
 
-
+L<Array::Iterator|Array::Iterator>
 
 =head1 AUTHOR
 

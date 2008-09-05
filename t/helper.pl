@@ -1,6 +1,8 @@
+#!usr/bin/perl
 #
 # helper.pl
 #
+use Array::Tour qw(:directions);
 my @b36_seq = ('0'..'9', 'A'..'Z', 'a'..'z');
 
 sub makegrid
