@@ -10,12 +10,13 @@ use warnings;
 
 require "t/helper.pl";
 
-my $rnd_wlk;
+my $rndwalk;
 my @grid;
 
 my($cols, $rows, $lvls) = (5, 5, 1);
 my $backtrack = 'q';
 my $walkdonttalk = 0;
+my $help = 0;
 my $seed;
 
 GetOptions("cols=i" => \$cols,
@@ -24,15 +25,17 @@ GetOptions("cols=i" => \$cols,
 	"backtrack=s" => \$backtrack,
 	"Seed=i" => \$seed,
 	"Walk" => \$walkdonttalk,
+	"help" => \$help,
 );
 
+helpme() if ($help);
 srand($seed) if (defined $seed);
 
 $backtrack = 'random' if ($backtrack eq 'r');
 $backtrack = 'stack' if ($backtrack eq 's');
 $backtrack = 'queue' unless ($backtrack =~ /r|s/);
 
-$rnd_wlk = Array::Tour::RandomWalk->new(
+$rndwalk = Array::Tour::RandomWalk->new(
 		dimensions => [$cols, $rows, $lvls],
 		backtrack => $backtrack,
 		);
@@ -40,23 +43,23 @@ $rnd_wlk = Array::Tour::RandomWalk->new(
 if ($walkdonttalk)
 {
 	#
-	# We're going to cheat and use the internal array in the $rnd_wlk
+	# We're going to cheat and use the internal array in the $rndwalk
 	# object to print out the grid.  This makes the loop very simple.
 	#
-	while (my $cref = $rnd_wlk->next())
+	while (my $cref = $rndwalk->next())
 	{
 		my @coords = @{$cref};
 	}
 }
 else
 {
-	walktour($rnd_wlk);
+	walktour($rndwalk);
 }
 
-#my $dmp = Data::Dumper->new($rnd_wlk->get_array());
+#my $dmp = Data::Dumper->new($rndwalk->get_array());
 #print $dmp->Dump, "\n\n\n";
-#print $rnd_wlk->dump_array();
-print ascii_grid($rnd_wlk), "\n";
+#print $rndwalk->dump_array();
+print ascii_grid($rndwalk), "\n";
 exit(0);
 
 sub ascii_grid
@@ -113,4 +116,29 @@ sub walktour
 	}
 }
 
+sub helpme
+{
+	my($progname) = $0;
+	$progname =~ s/.*[\\\/]//g;
+
+	open (PAGER, "|more") || die "Error piping into more\n";
+
+	print PAGER <<"ENDOFHELP";
+
+$progname -cols number -rows number -lvls number -backtrack [r|s|q] -Seed randseed -Walk
+
+Use the Array::Tour::Random tour and display the resulting matrix as a path.
+
+-cols
+-rows
+-lvls
+    The size of the array.  With no flags, the array is size [5, 5, 1].
+
+
+
+
+ENDOFHELP
+close PAGER;
+exit(0);
+}
 1;

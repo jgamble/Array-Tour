@@ -9,7 +9,7 @@ Array::Tour - Base class for Array Tours.
   #
   package Array::Tour::NewTypeOfTour
   use base qw(Array::Tour);
-  
+
   # (Code goes here).
 
 or
@@ -28,7 +28,6 @@ or
   use Array::Tour;
   
   my $by_row = Array::Tour->new(dimensions => [24, 80, 1]);
-  
 
 =head1 PREREQUISITES
 
@@ -47,9 +46,9 @@ the array.  This leaves the user of the tour object free to
 define the form of the array or the data structure behind it without
 restrictions from the tour object.
 
-By itself without any subclassing or options, the Array::Tour class traverses a
-simple left-to-right, top-to-bottom typewriter path. There are options to change
-the direction or rotation of the path.
+By itself without any subclassing or options, the Array::Tour class traverses
+a simple left-to-right, top-to-bottom typewriter path. There are options to change
+the direction or orientation of the path.
 
 =cut
 
@@ -71,12 +70,12 @@ use vars qw(%EXPORT_TAGS @EXPORT_OK);
 		South SouthEast East NorthEast Floor
 		SetPosition
 	)],
-	'status' => [ qw (START TOURING STOP)]
+	'status' => [ qw (TOURSTART TOURING TOURSTOP)]
 );
 
 @EXPORT_OK = ( @{ $EXPORT_TAGS{'directions'} }, @{ $EXPORT_TAGS{'status'} } );
 
-our $VERSION = '0.06';
+our $VERSION = '0.09_1';
 
 #
 # Directions.
@@ -100,9 +99,9 @@ use constant SetPosition => 0x8000;	# 15;
 #
 # {tourstatus} constants.
 #
-use constant START	=> 0;
+use constant TOURSTART	=> 0;
 use constant TOURING	=> 1;
-use constant STOP	=> 2;
+use constant TOURSTOP	=> 2;
 
 
 =head2 Tour Object Methods
@@ -155,7 +154,7 @@ sub new
 	$self->{array} = undef;
 	$self->{tourlength} = 1;
 	map {$self->{tourlength} *= $_} $self->get_dimensions();
-	$self->{tourstatus} = START;
+	$self->{tourstatus} = TOURSTART;
 	$self->{odometer} = 0;
 	$self->_set(%attributes);
 
@@ -180,7 +179,7 @@ sub reset
 	my %params = $self->describe();
 	$params{position} = [0, 0, 0];
 	$params{tourlength} = 1;
-	$params{tourstatus} = START;
+	$params{tourstatus} = TOURSTART;
 	$params{odometer} = 0;
 	$params{array} = undef if ($self->_uses_array());
 
@@ -201,7 +200,7 @@ Returns 1 if there is more to the tour, 0 if finished.
 sub has_next
 {
 	my $self = shift;
-	return ($self->{tourstatus} == STOP)? 0: 1;
+	return ($self->{tourstatus} == TOURSTOP)? 0: 1;
 }
 
 =head3 get_dimensions()
@@ -364,7 +363,7 @@ sub next
 	#
 	# Set up the conditions for the pacing.
 	#
-	if ($self->{tourstatus} == START)
+	if ($self->{tourstatus} == TOURSTART)
 	{
 		$self->{tourstatus} = TOURING;
 	}
@@ -382,7 +381,7 @@ sub next
 		${$self->{position}}[$dim] += 1 unless ($dim == $lastdim);
 	}
 
-	$self->{tourstatus} = STOP if (++$self->{odometer} == $self->{tourlength});
+	$self->{tourstatus} = TOURSTOP if (++$self->{odometer} == $self->{tourlength});
 	return $self->adjusted_position();
 }
 
@@ -548,7 +547,7 @@ attributes of the touring object.
 
 =cut
 
-sub _set()
+sub _set
 {
 	my $self = shift;
 	my(%params) = @_;
@@ -586,6 +585,8 @@ sub dump_array
 	my($cols, $rows, $lvls) = map {$_ - 1} @{$self->{dimensions}};
 	my $m = $self->{array};
 	my @levels;
+
+	return undef unless (defined $m);
 
 	foreach my $l (0..$lvls)
 	{
@@ -678,8 +679,8 @@ the position adjusted by the value in C<offset>.
 
 =item start
 
-I<Default value: [0, 0, 0].> The starting position of the tour.  Set
-automatically in this class.
+I<Default value: [0, 0, 0].> The starting position of the tour,
+but may begin with different coordinates depending upon the child class.
 
 =item position
 
@@ -696,8 +697,8 @@ to visit. This is sometimes used to determine the endpoint of the tour.
 
 =item tourstatus
 
-Initially set to B<START>.  The remaining _tourstatus values (found with
-the export tag C<:status>) are B<TOURING> and B<STOP>.
+Initially set to B<TOURSTART>.  The remaining _tourstatus values (found with
+the export tag C<:status>) are B<TOURING> and B<TOURSTOP>.
 
 =item array
 

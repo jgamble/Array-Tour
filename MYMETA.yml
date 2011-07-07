@@ -1,0 +1,31 @@
+---
+abstract: 'Base class for Array Tours.'
+author:
+  - 'John M. Gamble <jgamble@cpan.org>'
+build_requires:
+  Test::Simple: 0
+dynamic_config: 0
+generated_by: 'Module::Build version 0.3624'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2
+name: Array-Tour
+provides:
+  Array::Tour:
+    file: lib/Array/Tour.pm
+    version: 0.06
+  Array::Tour::RandomWalk:
+    file: lib/Array/Tour/RandomWalk.pm
+    version: 0.06
+  Array::Tour::Serpentine:
+    file: lib/Array/Tour/Serpentine.pm
+    version: 0.06
+  Array::Tour::Spiral:
+    file: lib/Array/Tour/Spiral.pm
+    version: 0.06
+requires:
+  perl: v5.8.0
+resources:
+  license: http://dev.perl.org/licenses/
+version: 0.06

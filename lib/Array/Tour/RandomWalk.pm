@@ -68,7 +68,7 @@ use integer;
 use base q(Array::Tour);
 use Array::Tour qw(:directions :status);
 
-our $VERSION = '0.06';
+our $VERSION = '0.09_1';
 
 =head3 direction()
 
@@ -81,7 +81,7 @@ Overrides Array::Tour's direction() method.
 sub direction()
 {
 	my $self = shift;
-	return ($self->{tourstatus} == STOP)? NoDirection: $self->{direction};
+	return ($self->{tourstatus} == TOURSTOP)? NoDirection: $self->{direction};
 }
 
 =head2 Tour Object Methods
@@ -129,7 +129,7 @@ sub next
 	{
 		if (@{ $self->{plist} } == 0)	# No place to back up, quit.
 		{
-			$self->{tourstatus} = STOP;
+			$self->{tourstatus} = TOURSTOP;
 			return undef;
 		}
 

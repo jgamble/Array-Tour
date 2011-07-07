@@ -7,7 +7,7 @@ use integer;
 use base q(Array::Tour);
 use Array::Tour qw(:directions :status);
 
-our $VERSION = '0.06';
+our $VERSION = '0.09_1';
 
 =head1 NAME
 
@@ -65,7 +65,7 @@ one were to tour an array's cells in a serpentine path.
 sub direction()
 {
 	my $self = shift;
-	return ($self->{status} == STOP)? undef: ${$self->{direction}}[0];
+	return ($self->{status} == TOURSTOP)? undef: ${$self->{direction}}[0];
 }
 
 =head3 next()
@@ -86,7 +86,7 @@ sub next
 	#
 	# Set up the conditions for the pacing.
 	#
-	if ($self->{tourstatus} == START)
+	if ($self->{tourstatus} == TOURSTART)
 	{
 		$self->{tourstatus} = TOURING;
 		$self->{pacer} = ${$self->{pacing}}[0];
@@ -107,7 +107,7 @@ sub next
 		{
 			$self->{pacer} = ${$self->{pacing}}[1];
 			${$self->{pacing}}[0] += $self->{pacechange};
-	
+
 			#
 			# Rotate to the next pacing length and the next direction.
 			#
@@ -116,7 +116,7 @@ sub next
 		}
 	}
 
-	$self->{tourstatus} = STOP if (++$self->{odometer} == $self->{tourlength});
+	$self->{tourstatus} = TOURSTOP if (++$self->{odometer} == $self->{tourlength});
 	return $self->adjusted_position();
 }
 
@@ -126,7 +126,6 @@ sub next
 
 Return a new object that follows the same path as the original object,
 reversing the inward/outward direction.
-
 
 =cut
 

@@ -7,7 +7,7 @@ use integer;
 use base q(Array::Tour);
 use Array::Tour qw(:directions :status);
 
-our $VERSION = '0.06';
+our $VERSION = '0.09_1';
 
 =head1 NAME
 
@@ -73,7 +73,7 @@ Overrides Array::Tour's direction() method.
 sub direction()
 {
 	my $self = shift;
-	return ($self->{status} == STOP)? undef: ${$self->{direction}}[0];
+	return ($self->{status} == TOURSTOP)? undef: ${$self->{direction}}[0];
 }
 
 =head3 next()
@@ -109,7 +109,7 @@ sub next()
 	# spirals because by the time it is used for the second time
 	# it won't be shortened by a perpendicular branch of the walk.
 	#
-	if ($self->{tourstatus} == START)
+	if ($self->{tourstatus} == TOURSTART)
 	{
 		$self->{tourstatus} = TOURING;
 		$self->{pacer} = ${$self->{pacing}}[0];
@@ -141,7 +141,7 @@ sub next()
 
 	}
 
-	$self->{tourstatus} = STOP if (++$self->{odometer} == $self->{tourlength});
+	$self->{tourstatus} = TOURSTOP if (++$self->{odometer} == $self->{tourlength});
 	return $self->adjusted_position();
 }
 
@@ -360,12 +360,12 @@ __END__
 
 The four by four case demonstrates the different possible spiral arrangements.
 There are four possible central positions. By default, the spiral will
-begin in the top left corner, but the options C<corner_bottom> and
+begin in the$ top left corner, but the options C<corner_bottom> and
 C<corner_right> can force the starting point to a different corner of
 the square.
 
 The results below show the results of the four different combinations of
-($corner_bottom, $corner_right), traveling clockwise. The characters
+C<($corner_bottom, $corner_right)>, traveling clockwise. The characters
 S<'a' .. 'p'> were drawn in order to show the path of the spiral:
 
       (0,0)     (0,1)     (1,1)     (1,0)
@@ -378,12 +378,12 @@ What if the grid is five by five? With both dimensions odd, there is no
 left/right or top/bottom corner. There are still four possible paths to
 take though, as shown using the characters S<'a' .. 'y'>:
 
-       (0,0)      (0,1)      (1,1)      (1,0)
-       uvwxy      qrstu      mnopq      yjklm
-       tghij      pefgv      lcder      xibcn
-       sfabk      odahw      kbafs      whado
-       redcl      ncbix      jihgt      vgfep
-       qponm      mlkjy      yxwvu      utsrq
+      (0,0)      (0,1)      (1,1)      (1,0)
+      uvwxy      qrstu      mnopq      yjklm
+      tghij      pefgv      lcder      xibcn
+      sfabk      odahw      kbafs      whado
+      redcl      ncbix      jihgt      vgfep
+      qponm      mlkjy      yxwvu      utsrq
 
 Even though there is only one center square, the spiral path takes the
 same starting direction as the spiral on the four by four square does.
@@ -393,6 +393,15 @@ same starting direction as the spiral on the four by four square does.
 Some of our assumptions go awry if width does not equal height. If the
 shorter of the two dimensions is even, the starting corner does not
 always go where one expects. Here are some examples.
+
+
+Six columns, four rows:
+
+      (0,0)      (0,1)      (1,1)      (1,0)
+      ABCDEF     FGHIJK     IJKLMN     N89ABC
+      90123G     E3456L     H45678     M7012D
+      87654H     D2107M     G32109     L6543E
+      NMLKJI     CBA98N     FEDCBA     KJIHGF
 
 =head1 AUTHOR
 
